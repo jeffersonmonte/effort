@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Interview to BPMN{% endblock %}</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <!-- HTMX via CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9JHIZYkLjtSXecqGDiADGgIt" crossorigin="anonymous"></script>
+    <!-- Alpine.js via CDN (minimal interactivity as per spec) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        /* Custom styles can go here or in a separate CSS file loaded via /static */
+        body {
+            font-family: sans-serif;
+        }
+        /* Enhance htmx processing indicator */
+        .htmx-indicator{
+            display:none;
+        }
+        .htmx-request .htmx-indicator{
+            display:inline;
+        }
+        .htmx-request.htmx-indicator{
+            display:inline;
+        }
+        /* Basic styling for form validation errors if needed */
+        .error-message {
+            color: red;
+            font-size: 0.875em;
+        }
+    </style>
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="bg-slate-100 text-slate-800">
+    <nav class="bg-slate-800 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">Interview-to-BPMN</a>
+            <div>
+                <!-- Navigation links can go here, e.g., for authenticated users -->
+                {% if request.state.current_user %}
+                    <span class="mr-4">Welcome, {{ request.state.current_user.email }}</span>
+                    <a href="/auth/jwt/logout" hx-post="/auth/jwt/logout" hx-target="body" hx-push-url="/auth/request-magic-link-form" class="hover:text-slate-300">Logout (HTMX)</a>
+                    <!-- Standard logout link if HTMX one fails or for non-JS:
+                         <form action="/auth/jwt/logout" method="post" style="display: inline;">
+                             <button type="submit" class="hover:text-slate-300">Logout</button>
+                         </form>
+                    -->
+                {% else %}
+                    <!-- Links for login/register if applicable -->
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 mt-6">
+        {% block content %}
+        <p>Welcome to the application. Content will be loaded here.</p>
+        {% endblock %}
+    </main>
+
+    <footer class="text-center text-sm text-slate-600 py-8 mt-12 border-t border-slate-300">
+        <p>&copy; Interview-to-BPMN. All rights reserved.</p>
+    </footer>
+
+    {# Global HTMX processing indicator example #}
+    <div id="loading-spinner" class="htmx-indicator fixed bottom-4 right-4 bg-blue-500 text-white p-2 rounded shadow-lg">
+        Loading...
+    </div>
+
+    {# Script to inject current_user into request.state for templates if not already done by a middleware #}
+    {# This is a common pattern if you need user info globally in templates #}
+    {# However, `fastapi-users` often makes user available in request if middleware is used. #}
+    {# Let's assume for now that `request.state.current_user` is populated by a dependency/middleware #}
+    {# or passed explicitly to template context. #}
+    {# If not, a small script here could fetch /users/me and store it, or it's passed by each route. #}
+
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html>

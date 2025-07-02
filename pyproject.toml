@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "interview-to-bpmn"
+version = "0.1.0"
+description = "SaaS for generating BPMN diagrams from interviews"
+authors = ["Jules Agent <jules@example.com>"]
+readme = "README.md"
+packages = [{include = "app"}] # Configure poetry to look for an 'app' package
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.14"
+uvicorn = {extras = ["standard"], version = "^0.35.0"}
+sqlmodel = "^0.0.24"
+jinja2 = "^3.1.6"
+python-multipart = "^0.0.20"
+alembic = "^1.16.2"
+email-validator = "^2.2.0"
+fastapi-users = {extras = ["sqlmodel"], version = "^14.0.1"}
+aiosmtplib = "^4.0.1"
+bpmn-python = "^0.0.18"
+aiosqlite = "^0.21.0"
+
+[tool.poetry.group.dev.dependencies]
+# Dev dependencies will be added via 'poetry add --group dev'
+pytest = "^8.4.1"
+ruff = "^0.12.1"
+mypy = "^1.16.1"
+httpx = "^0.28.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "W", "F", "I", "UP", "PL", "PTH"] # Common useful selections
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+force-sort-within-sections = true
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = false # Start with false, can set to true for specific problematic libs if needed
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "aiosmtplib.*", # If it has no stubs or problematic stubs
+    "bpmn_python.*", # If it has no stubs
+    "matplotlib.*" # If it has no stubs
+]
+ignore_missing_imports = true

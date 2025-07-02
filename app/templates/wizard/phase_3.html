@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Wizard - Phase 3: Dores e Melhorias - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-2 text-slate-700">Interview Wizard - Phase {{ phase_number }}/{{ total_phases }}</h1>
+    <h2 class="text-xl font-semibold mb-6 text-slate-600">Dores e Melhorias</h2>
+
+    {% if error_message %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline">{{ error_message }}</span>
+        </div>
+    {% endif %}
+
+    <form
+        hx-post="{{ request.url_for('handle_wizard_phase_submission', interview_id=interview.id, phase_number=phase_number) }}"
+        hx-target="body"
+        class="space-y-6"
+        id="phase3Form"
+    >
+        <fieldset class="border p-4 rounded-md">
+            <legend class="text-lg font-medium text-slate-700 px-2">Detalhes da Dor ou Melhoria</legend>
+
+            <div>
+                <label for="etapa_relacionada_p3" class="block text-sm font-medium text-slate-700">3.1 Etapa relacionada (Nome ou Nº da Etapa de Fase 2)</label>
+                <input type="text" name="etapa_relacionada_p3" id="etapa_relacionada_p3" value="{{ form_data.get('etapa_relacionada_p3', '') }}" class="mt-1 block w-full input-field">
+            </div>
+
+            <div>
+                <label for="problema_dor_atual" class="block text-sm font-medium text-slate-700">3.2 Problema ou dor atual</label>
+                <textarea name="problema_dor_atual" id="problema_dor_atual" rows="3" class="mt-1 block w-full input-field">{{ form_data.get('problema_dor_atual', '') }}</textarea>
+            </div>
+
+            <div>
+                <label for="impacto_problema" class="block text-sm font-medium text-slate-700">3.3 Impacto do problema</label>
+                <textarea name="impacto_problema" id="impacto_problema" rows="3" class="mt-1 block w-full input-field">{{ form_data.get('impacto_problema', '') }}</textarea>
+            </div>
+
+            <div>
+                <label for="sugestao_melhoria" class="block text-sm font-medium text-slate-700">3.4 Sugestão de melhoria</label>
+                <textarea name="sugestao_melhoria" id="sugestao_melhoria" rows="3" class="mt-1 block w-full input-field">{{ form_data.get('sugestao_melhoria', '') }}</textarea>
+            </div>
+        </fieldset>
+
+        <div class="flex justify-between items-center mt-8">
+            <a href="{{ request.url_for('render_wizard_phase', interview_id=interview.id, phase_number=phase_number-1) }}"
+               class="py-2 px-4 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50">
+                &laquo; Voltar para Fase {{ phase_number-1 }}
+            </a>
+            <button
+                type="submit"
+                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                Salvar e Continuar para Fase {{ phase_number+1 }}
+                <span id="phase3-spinner" class="htmx-indicator ml-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </div>
+    </form>
+    <p class="text-xs text-slate-500 mt-4">Interview ID: {{ interview.id }} | Status: {{ interview.status }}</p>
+</div>
+<style>
+    .input-field {
+        @apply mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
+    }
+</style>
+{% endblock %}

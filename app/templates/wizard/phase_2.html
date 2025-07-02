@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Wizard - Phase 2: Etapas do Processo - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-2 text-slate-700">Interview Wizard - Phase {{ phase_number }}/{{ total_phases }}</h1>
+    <h2 class="text-xl font-semibold mb-6 text-slate-600">Etapas do Processo</h2>
+
+    {% if error_message %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline">{{ error_message }}</span>
+        </div>
+    {% endif %}
+
+    {# Display existing etapas #}
+    <div id="etapas-list" class="mb-8">
+        <h3 class="text-lg font-medium text-slate-700 mb-3">Etapas Adicionadas:</h3>
+        {% if form_data.etapas and form_data.etapas|length > 0 %}
+            <ul class="space-y-4">
+                {% for etapa in form_data.etapas %}
+                <li class="border p-4 rounded-md bg-slate-50">
+                    <p class="font-semibold">{{ etapa.get('etapa_numero', 'N/A') }}. {{ etapa.get('nome_etapa', 'Nome não informado') }}</p>
+                    <p class="text-sm text-slate-600">Atividade: {{ etapa.get('atividade_realizada', 'N/A') }}</p>
+                    <p class="text-sm text-slate-600">Responsável: {{ etapa.get('responsavel_etapa', 'N/A') }}</p>
+                    {# Add more details or an edit/delete button here if needed in future #}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-slate-500">Nenhuma etapa adicionada ainda.</p>
+        {% endif %}
+    </div>
+
+    <hr class="my-6">
+
+    {# Form to add a new etapa #}
+    <h3 class="text-lg font-medium text-slate-700 mb-4">Adicionar Nova Etapa</h3>
+    <form
+        hx-post="{{ request.url_for('handle_wizard_phase_submission', interview_id=interview.id, phase_number=phase_number) }}"
+        hx-target="#etapas-list" {# Target the list for update on success, or whole page/errors #}
+        hx-swap="innerHTML" {# Or outerHTML if replacing the whole section including its title #}
+        {# Consider hx-on::after-request to clear form fields or redirect after successful add #}
+        {# For redirect to same page to show updated list and clear form: server should redirect. #}
+        {# The current wizard router redirects to next phase OR review page. #}
+        {# For phase 2, after adding an etapa, we want to stay on phase 2 to add more, or proceed. #}
+        {# This needs specific handling in the wizard router for phase 2 submission. #}
+        {# Option: submit button specific to "add this etapa", another for "finish phase 2 & continue" #}
+        {# For MVP, let's assume each submission adds one etapa and reloads this page (via redirect) #}
+        class="space-y-6"
+        id="phase2FormNewEtapa"
+    >
+        {# Hidden field to indicate this is an "add_etapa" action if needed by backend #}
+        <input type="hidden" name="_action" value="add_etapa">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="etapa_numero" class="block text-sm font-medium text-slate-700">2.1 Etapa Nº</label>
+                <input type="text" name="etapa_numero" id="etapa_numero" required class="mt-1 block w-full input-field">
+            </div>
+            <div>
+                <label for="nome_etapa" class="block text-sm font-medium text-slate-700">2.2 Nome da Etapa</label>
+                <input type="text" name="nome_etapa" id="nome_etapa" required class="mt-1 block w-full input-field">
+            </div>
+        </div>
+
+        <div>
+            <label for="atividade_realizada" class="block text-sm font-medium text-slate-700">2.3 Atividade Realizada</label>
+            <textarea name="atividade_realizada" id="atividade_realizada" rows="2" class="mt-1 block w-full input-field"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="responsavel_etapa" class="block text-sm font-medium text-slate-700">2.4 Responsável (Pessoa/papel)</label>
+                <input type="text" name="responsavel_etapa" id="responsavel_etapa" class="mt-1 block w-full input-field">
+            </div>
+            <div>
+                <label for="sistema_utilizado" class="block text-sm font-medium text-slate-700">2.6 Sistema utilizado</label>
+                <input type="text" name="sistema_utilizado" id="sistema_utilizado" class="mt-1 block w-full input-field">
+            </div>
+        </div>
+
+        <div>
+            <label for="porque_realizar" class="block text-sm font-medium text-slate-700">2.5 Por que realizar essa atividade?</label>
+            <textarea name="porque_realizar" id="porque_realizar" rows="2" class="mt-1 block w-full input-field"></textarea>
+        </div>
+
+        <div>
+            <label for="quando_executada" class="block text-sm font-medium text-slate-700">2.7 Quando é executada?</label>
+            <input type="text" name="quando_executada" id="quando_executada" class="mt-1 block w-full input-field">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="entrada_dados" class="block text-sm font-medium text-slate-700">2.8 Entrada (Documento/dados)</label>
+                <input type="text" name="entrada_dados" id="entrada_dados" class="mt-1 block w-full input-field">
+            </div>
+            <div>
+                <label for="saida_dados" class="block text-sm font-medium text-slate-700">2.9 Saída (Documento/dados)</label>
+                <input type="text" name="saida_dados" id="saida_dados" class="mt-1 block w-full input-field">
+            </div>
+        </div>
+
+        <fieldset class="border p-4 rounded-md">
+            <legend class="text-md font-medium text-slate-700 px-2">2.10 Regras de negócio aplicadas</legend>
+            <div class="space-y-4 mt-2">
+                <div>
+                    <label for="decisao_automatica" class="block text-sm font-medium text-slate-700">2.10.1 Decisão automática ou humana?</label>
+                    <select name="decisao_automatica" id="decisao_automatica" class="mt-1 block w-full input-field">
+                        <option value="">Selecione...</option>
+                        <option value="automatica">Automática</option>
+                        <option value="humana">Humana</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="criterios_decisao" class="block text-sm font-medium text-slate-700">2.10.2 Critérios da decisão</label>
+                    <textarea name="criterios_decisao" id="criterios_decisao" rows="2" class="mt-1 block w-full input-field"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="frequencia_excecoes" class="block text-sm font-medium text-slate-700">2.10.3 Frequência de exceções</label>
+                        <input type="text" name="frequencia_excecoes" id="frequencia_excecoes" class="mt-1 block w-full input-field">
+                    </div>
+                    <div>
+                        <label for="tolerancia_sla" class="block text-sm font-medium text-slate-700">2.10.4 Tolerância/SLA</label>
+                        <input type="text" name="tolerancia_sla" id="tolerancia_sla" class="mt-1 block w-full input-field">
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <div>
+            <label for="duracao_estimada" class="block text-sm font-medium text-slate-700">2.11 Duração estimada</label>
+            <input type="text" name="duracao_estimada" id="duracao_estimada" class="mt-1 block w-full input-field">
+        </div>
+
+        <div>
+            <label for="observacoes_etapa" class="block text-sm font-medium text-slate-700">2.12 Observações</label>
+            <textarea name="observacoes_etapa" id="observacoes_etapa" rows="3" class="mt-1 block w-full input-field"></textarea>
+        </div>
+
+        <div class="flex justify-end pt-4">
+            <button
+                type="submit"
+                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                Adicionar esta Etapa
+                <span id="phase2-spinner" class="htmx-indicator ml-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </div>
+    </form>
+
+    <hr class="my-8">
+
+    <div class="flex justify-between items-center mt-8">
+        <a href="{{ request.url_for('render_wizard_phase', interview_id=interview.id, phase_number=phase_number-1) if phase_number > 1 else '#' }}"
+           class="py-2 px-4 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 {% if phase_number <= 1 %}disabled_link{% endif %}"
+           aria-disabled="{{ 'true' if phase_number <= 1 else 'false' }}">
+            &laquo; Voltar para Fase {{ phase_number-1 }}
+        </a>
+        <a href="{{ request.url_for('render_wizard_phase', interview_id=interview.id, phase_number=phase_number+1) if phase_number < total_phases else request.url_for('render_wizard_review_page', interview_id=interview.id) }}"
+           class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            {% if form_data.etapas and form_data.etapas|length > 0 %}
+                Continuar para Fase {{ phase_number+1 if phase_number < total_phases else 'Revisão' }}
+            {% else %}
+                Pular para Fase {{ phase_number+1 if phase_number < total_phases else 'Revisão' }} (sem adicionar etapas)
+            {% endif %}
+            &raquo;
+        </a>
+    </div>
+    <p class="text-xs text-slate-500 mt-4">Interview ID: {{ interview.id }} | Status: {{ interview.status }}</p>
+</div>
+
+<style>
+    .input-field {
+        @apply mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
+    }
+    .disabled_link {
+        @apply opacity-50 cursor-not-allowed;
+    }
+</style>
+
+<script>
+// If using HTMX to reload the page after adding an etapa, ensure the server redirects.
+// The router's handle_wizard_phase_submission for phase 2 needs to redirect back to phase 2.
+// Or, if hx-target targets a specific div, the server should return only that partial HTML.
+// Current form hx-target="#etapas-list" hx-swap="innerHTML"
+// This means the server should return HTML for just the #etapas-list content.
+// This requires a dedicated endpoint or conditional logic in handle_wizard_phase_submission for phase 2.
+
+// For now, let's make Phase 2 submission (adding an etapa) redirect back to the Phase 2 page.
+// This means the `handle_wizard_phase_submission` for phase_number=2 should redirect
+// to `render_wizard_phase` for phase_number=2.
+// The general redirect logic `if phase_number < 5: next_phase_number = phase_number + 1` needs adjustment for phase 2.
+// I will handle this in the `app/routers/wizard.py` logic for phase 2.
+</script>
+{% endblock %}

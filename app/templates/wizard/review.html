@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Wizard - Review Interview - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-slate-700">Revisão da Entrevista</h1>
+    <p class="mb-6 text-slate-600">Por favor, revise todas as informações coletadas antes de submeter para geração do diagrama BPMN.</p>
+
+    {# Phase 1 Data #}
+    {% set phase1_data = all_answers_by_phase.get(1, {}) %}
+    <section class="mb-8 p-4 border rounded-md">
+        <h2 class="text-xl font-semibold mb-3 text-indigo-600">Fase 1: Entrevista Geral</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+            <p><strong>Nome do entrevistado:</strong> {{ phase1_data.get('nome_entrevistado', 'N/A') }}</p>
+            <p><strong>Cargo/Função:</strong> {{ phase1_data.get('cargo_funcao', 'N/A') }}</p>
+            <p><strong>Setor:</strong> {{ phase1_data.get('setor', 'N/A') }}</p>
+            <p><strong>Data da entrevista:</strong> {{ phase1_data.get('data_entrevista', 'N/A') }}</p>
+            <p><strong>Nome do entrevistador:</strong> {{ phase1_data.get('nome_entrevistador', 'N/A') }}</p>
+        </div>
+        <div class="mt-3">
+            <p><strong>Processo do entrevistado:</strong><br>{{ phase1_data.get('processo_entrevistado', 'N/A') | nl2br }}</p>
+            <p class="mt-2"><strong>Como é medido o sucesso:</strong><br>{{ phase1_data.get('medida_sucesso', 'N/A') | nl2br }}</p>
+        </div>
+        <h3 class="text-lg font-medium mt-4 mb-2 text-slate-700">Contexto e Escopo do Processo</h3>
+        <div class="space-y-2">
+            <p><strong>Objetivo de negócio:</strong><br>{{ phase1_data.get('objetivo_negocio', 'N/A') | nl2br }}</p>
+            <p><strong>Fronteiras do processo:</strong><br>{{ phase1_data.get('fronteiras_processo', 'N/A') | nl2br }}</p>
+            <p><strong>Stakeholders envolvidos:</strong><br>{{ phase1_data.get('stakeholders_envolvidos', 'N/A') | nl2br }}</p>
+            <p><strong>Encaixe em processos "pai":</strong><br>{{ phase1_data.get('encaixe_processos_pai', 'N/A') | nl2br }}</p>
+        </div>
+    </section>
+
+    {# Phase 2 Data #}
+    {% set phase2_data = all_answers_by_phase.get(2, {}) %}
+    <section class="mb-8 p-4 border rounded-md">
+        <h2 class="text-xl font-semibold mb-3 text-indigo-600">Fase 2: Etapas do Processo</h2>
+        {% if phase2_data.etapas and phase2_data.etapas|length > 0 %}
+            {% for etapa in phase2_data.etapas %}
+            <div class="mb-4 p-3 border-b last:border-b-0">
+                <h4 class="font-medium text-md text-slate-800">Etapa {{ etapa.get('etapa_numero', 'N/A') }}: {{ etapa.get('nome_etapa', 'N/A') }}</h4>
+                <p><strong>Atividade Realizada:</strong> {{ etapa.get('atividade_realizada', 'N/A') }}</p>
+                <p><strong>Responsável:</strong> {{ etapa.get('responsavel_etapa', 'N/A') }}</p>
+                <p><strong>Por que realizar:</strong> {{ etapa.get('porque_realizar', 'N/A') }}</p>
+                <p><strong>Sistema utilizado:</strong> {{ etapa.get('sistema_utilizado', 'N/A') }}</p>
+                <p><strong>Quando é executada:</strong> {{ etapa.get('quando_executada', 'N/A') }}</p>
+                <p><strong>Entrada:</strong> {{ etapa.get('entrada_dados', 'N/A') }}</p>
+                <p><strong>Saída:</strong> {{ etapa.get('saida_dados', 'N/A') }}</p>
+                <p class="font-medium mt-1">Regras de negócio:</p>
+                <ul class="list-disc list-inside ml-4 text-sm">
+                    <li><strong>Decisão:</strong> {{ etapa.get('decisao_automatica', 'N/A') }}</li>
+                    <li><strong>Critérios:</strong> {{ etapa.get('criterios_decisao', 'N/A') }}</li>
+                    <li><strong>Frequência de exceções:</strong> {{ etapa.get('frequencia_excecoes', 'N/A') }}</li>
+                    <li><strong>Tolerância/SLA:</strong> {{ etapa.get('tolerancia_sla', 'N/A') }}</li>
+                </ul>
+                <p><strong>Duração estimada:</strong> {{ etapa.get('duracao_estimada', 'N/A') }}</p>
+                <p><strong>Observações:</strong> {{ etapa.get('observacoes_etapa', 'N/A') }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-slate-500">Nenhuma etapa adicionada.</p>
+        {% endif %}
+    </section>
+
+    {# Phase 3 Data #}
+    {% set phase3_data = all_answers_by_phase.get(3, {}) %}
+    <section class="mb-8 p-4 border rounded-md">
+        <h2 class="text-xl font-semibold mb-3 text-indigo-600">Fase 3: Dores e Melhorias</h2>
+        <p><strong>Etapa relacionada:</strong> {{ phase3_data.get('etapa_relacionada_p3', 'N/A') }}</p>
+        <p><strong>Problema ou dor atual:</strong><br>{{ phase3_data.get('problema_dor_atual', 'N/A') | nl2br }}</p>
+        <p class="mt-2"><strong>Impacto do problema:</strong><br>{{ phase3_data.get('impacto_problema', 'N/A') | nl2br }}</p>
+        <p class="mt-2"><strong>Sugestão de melhoria:</strong><br>{{ phase3_data.get('sugestao_melhoria', 'N/A') | nl2br }}</p>
+    </section>
+
+    {# Phase 4 Data #}
+    {% set phase4_data = all_answers_by_phase.get(4, {}) %}
+    <section class="mb-8 p-4 border rounded-md">
+        <h2 class="text-xl font-semibold mb-3 text-indigo-600">Fase 4: Exceções</h2>
+        <p><strong>Etapa relacionada:</strong> {{ phase4_data.get('etapa_relacionada_p4', 'N/A') }}</p>
+        <p><strong>Descrição da exceção:</strong><br>{{ phase4_data.get('descricao_excecao', 'N/A') | nl2br }}</p>
+        <p class="mt-2"><strong>Como é tratada atualmente:</strong><br>{{ phase4_data.get('como_tratada_atualmente', 'N/A') | nl2br }}</p>
+        <p class="mt-2"><strong>Quem decide:</strong> {{ phase4_data.get('quem_decide_excecao', 'N/A') }}</p>
+    </section>
+
+    {# Phase 5 Data #}
+    {% set phase5_data = all_answers_by_phase.get(5, {}) %}
+    <section class="mb-8 p-4 border rounded-md">
+        <h2 class="text-xl font-semibold mb-3 text-indigo-600">Fase 5: Anexos</h2>
+        <p><strong>Nome do documento:</strong> {{ phase5_data.get('nome_documento', 'N/A') }}</p>
+        <p><strong>Tipo:</strong> {{ phase5_data.get('tipo_documento', 'N/A') }}</p>
+        <p class="mt-2"><strong>Descrição/Finalidade:</strong><br>{{ phase5_data.get('descricao_finalidade_uso', 'N/A') | nl2br }}</p>
+        <p class="mt-2"><strong>Local de armazenamento:</strong> {{ phase5_data.get('local_armazenamento', 'N/A') }}</p>
+    </section>
+
+    <div class="mt-10 flex justify-between items-center">
+        <a href="{{ request.url_for('render_wizard_phase', interview_id=interview.id, phase_number=total_phases) }}"
+           class="py-2 px-4 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50">
+            &laquo; Voltar para Fase {{ total_phases }}
+        </a>
+
+        {# The API endpoint /interviews/{id}/submit is in interviews.py router #}
+        {# It should ideally return a RedirectResponse for HTMX to follow. #}
+        <form
+            id="submit-interview-form"
+            hx-post="{{ request.url_for('submit_interview_for_bpmn_generation', interview_id=interview.id) }}"
+            hx-target="body" {# Or a specific notification area #}
+            {# hx-confirm="Tem certeza que deseja submeter esta entrevista para geração do BPMN? Esta ação não poderá ser desfeita facilmente." #}
+        >
+            <button
+                type="submit"
+                class="inline-flex items-center justify-center py-2 px-6 border border-transparent shadow-sm text-lg font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                {% if interview.status != 'draft' %}disabled title="Entrevista já foi submetida."{% endif %}
+            >
+                Submeter e Gerar BPMN
+                <span id="submit-spinner" class="htmx-indicator ml-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </form>
+    </div>
+    {% if interview.status != 'draft' %}
+    <p class="text-center text-orange-600 mt-4">Esta entrevista já foi submetida (Status: {{ interview.status }}).</p>
+    {% endif %}
+
+    <p class="text-xs text-slate-500 mt-6">Interview ID: {{ interview.id }}</p>
+</div>
+
+<script>
+// Add a मूर्ख_पूजा_varsh function to Jinja context if not available globally
+// For the footer: {{ मूर्ख_पूजा_varsh() }}
+// This would be done in main.py when setting up Jinja2Templates:
+// templates.env.globals['मूर्ख_पूजा_varsh'] = lambda: datetime.now().year
+// For now, it will likely render as empty or cause a Jinja error if not defined.
+// I should fix this in base.html or define the global in main.py.
+// For now, I'll remove it from base.html to avoid error if not defined.
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Python virtual environments
+.venv
+venv
+ENV
+env
+pip-requirements.txt # If using pip instead of poetry for some reason
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# SQLite database file (should be a volume in docker-compose)
+*.db
+*.db-journal* # For SQLite WAL mode
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg
+
+# Local environment config (use Docker env variables or mounted configs instead)
+.env # Loaded by app, but should not be copied into image directly if sensitive
+     # For Docker, provide env vars through docker-compose or Docker run -e
+
+# Poetry files (already handled by COPY in Dockerfile specifically)
+# pyproject.toml # Copied explicitly in Dockerfile
+# poetry.lock    # Copied explicitly in Dockerfile
+
+# Test files (not needed in production image)
+tests/
+# alembic directory and ini file (migrations usually run as separate step or entrypoint)
+alembic/
+alembic.ini
+
+# README and other docs
+README.md
+# Add other project specific files/dirs to ignore
+# e.g. notebooks/, docs/, etc.

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Wizard - Phase 1: Entrevista Geral - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-2 text-slate-700">Interview Wizard - Phase {{ phase_number }}/{{ total_phases }}</h1>
+    <h2 class="text-xl font-semibold mb-6 text-slate-600">Entrevista Geral</h2>
+
+    {% if error_message %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline">{{ error_message }}</span>
+        </div>
+    {% endif %}
+
+    <form
+        hx-post="{{ request.url_for('handle_wizard_phase_submission', interview_id=interview.id, phase_number=phase_number) }}"
+        hx-target="body" {# Replace whole body on redirect, or target a specific div for error messages/partial updates #}
+        hx-swap="outerHTML" {# Default swap method, often fine for full page reloads/redirects via HTMX #}
+        class="space-y-6"
+        id="phase1Form"
+    >
+        {# CSRF token would go here if using CSRF protection with standard forms #}
+        {# For HTMX with FastAPI, CSRF needs specific handling if enabled #}
+
+        <fieldset class="border p-4 rounded-md">
+            <legend class="text-lg font-medium text-slate-700 px-2">Informações Gerais</legend>
+
+            <div>
+                <label for="nome_entrevistado" class="block text-sm font-medium text-slate-700">1. Nome do entrevistado</label>
+                <input type="text" name="nome_entrevistado" id="nome_entrevistado" value="{{ form_data.get('nome_entrevistado', '') }}" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="cargo_funcao" class="block text-sm font-medium text-slate-700">2. Cargo/Função</label>
+                <input type="text" name="cargo_funcao" id="cargo_funcao" value="{{ form_data.get('cargo_funcao', '') }}" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="setor" class="block text-sm font-medium text-slate-700">3. Setor</label>
+                <input type="text" name="setor" id="setor" value="{{ form_data.get('setor', '') }}" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="data_entrevista" class="block text-sm font-medium text-slate-700">4. Data da entrevista (ISO)</label>
+                <input type="date" name="data_entrevista" id="data_entrevista" value="{{ form_data.get('data_entrevista', '') }}" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="nome_entrevistador" class="block text-sm font-medium text-slate-700">5. Nome do entrevistador</label>
+                <input type="text" name="nome_entrevistador" id="nome_entrevistador" value="{{ form_data.get('nome_entrevistador', '') }}" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="processo_entrevistado" class="block text-sm font-medium text-slate-700">6. Processo do entrevistado</label>
+                <textarea name="processo_entrevistado" id="processo_entrevistado" rows="3" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form_data.get('processo_entrevistado', '') }}</textarea>
+            </div>
+
+            <div>
+                <label for="medida_sucesso" class="block text-sm font-medium text-slate-700">7. Como é medido o sucesso das suas atividades?</label>
+                <textarea name="medida_sucesso" id="medida_sucesso" rows="3" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form_data.get('medida_sucesso', '') }}</textarea>
+            </div>
+        </fieldset>
+
+        <fieldset class="border p-4 rounded-md mt-6">
+            <legend class="text-lg font-medium text-slate-700 px-2">Contexto e Escopo do Processo</legend>
+
+            <div>
+                <label for="objetivo_negocio" class="block text-sm font-medium text-slate-700">1.1.1 Objetivo de negócio do processo (qual valor gera?)</label>
+                <textarea name="objetivo_negocio" id="objetivo_negocio" rows="3" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form_data.get('objetivo_negocio', '') }}</textarea>
+            </div>
+
+            <div>
+                <label for="fronteiras_processo" class="block text-sm font-medium text-slate-700">1.1.2 Fronteiras do processo (onde começa e termina; o que fica fora)</label>
+                <textarea name="fronteiras_processo" id="fronteiras_processo" rows="3" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form_data.get('fronteiras_processo', '') }}</textarea>
+            </div>
+
+            <div>
+                <label for="stakeholders_envolvidos" class="block text-sm font-medium text-slate-700">1.1.3 Stakeholders envolvidos (internos, externos, sistemas)</label>
+                <textarea name="stakeholders_envolvidos" id="stakeholders_envolvidos" rows="3" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form_data.get('stakeholders_envolvidos', '') }}</textarea>
+            </div>
+
+            <div>
+                <label for="encaixe_processos_pai" class="block text-sm font-medium text-slate-700">1.1.4 Encaixe em processos "pai" (Call Activity ou nível mais alto)</label>
+                <textarea name="encaixe_processos_pai" id="encaixe_processos_pai" rows="3" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form_data.get('encaixe_processos_pai', '') }}</textarea>
+            </div>
+        </fieldset>
+
+        <div class="flex justify-between items-center mt-8">
+            <span></span> {# Placeholder for previous button or info #}
+            <button
+                type="submit"
+                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                Salvar e Continuar para Fase 2
+                <span id="phase1-spinner" class="htmx-indicator ml-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </div>
+    </form>
+    <p class="text-xs text-slate-500 mt-4">Interview ID: {{ interview.id }}</p>
+    <p class="text-xs text-slate-500">Status: {{ interview.status }}</p>
+
+</div>
+
+<script>
+    // Minimal Alpine.js for client-side enhancements if needed later.
+    // For example, auto-saving drafts to localStorage or more complex UI interactions.
+    // document.addEventListener('alpine:init', () => {
+    //     Alpine.data('phase1Form', () => ({
+    //         // formData: {{ form_data | tojson | safe }}, // Example if passing initial data to Alpine
+    //         // init() { console.log('Alpine init for phase 1 with data:', this.formData); }
+    //     }));
+    // });
+</script>
+{% endblock %}

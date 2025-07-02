@@ -1,0 +1,105 @@
+name: Python Application CI
+
+on:
+  push:
+    branches: [ "main", "master" ] # Adjust if your main branch has a different name
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Specify Python versions to test against if needed, for now just one
+        python-version: ["3.11"]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: "1.8.3" # Specify your project's Poetry version or use 'latest'
+        virtualenvs-create: true # Recommended for CI to isolate dependencies
+        virtualenvs-in-project: true # Creates .venv in project dir, easier to cache/use
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv # Path to cache (if virtualenvs-in-project: true)
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root # Install all dependencies including dev
+
+    # If cache was hit, ensure dependencies are synced (in case poetry.lock changed slightly but key matched)
+    - name: Sync dependencies if cache hit
+      if: steps.cached-poetry-dependencies.outputs.cache-hit == 'true'
+      run: poetry install --no-interaction --no-root --sync
+
+
+    - name: Lint with Ruff
+      run: |
+        poetry run ruff lint .
+        # Check formatting (no --fix in CI, just check)
+        poetry run ruff format --check .
+
+    - name: Static Type Checking with MyPy
+      run: |
+        # MyPy needs to be able to import the 'app' package.
+        # poetry run mypy app/ --config-file pyproject.toml
+        # Or, if pyproject.toml [tool.mypy] section is used, it's often just:
+        poetry run mypy .
+        # MyPy will pick up config from pyproject.toml.
+        # Ensure mypy paths are set up correctly if needed, often handled by poetry run.
+
+    - name: Run Pytest
+      run: |
+        # Pytest needs to discover tests in the 'tests' directory.
+        # It also needs to be able to import the 'app' package.
+        # `poetry run pytest` usually handles PYTHONPATH correctly.
+        # Add any necessary environment variables for tests if they rely on them.
+        # For example, if tests need a specific DATABASE_URL or secrets:
+        #   env:
+        #     AUTH_SECRET: "test_secret"
+        #     DATABASE_URL: "sqlite+aiosqlite:///./test_interview_bpmn.db" # In-memory or test file
+        poetry run pytest tests/
+        # If tests create/modify db, ensure cleanup or use a test-specific DB.
+        # For now, assuming tests mock DB interactions or use in-memory SQLite.
+        # The current test_bpmn_service.py mocks DB calls.
+        # If other tests interact with DB, they'll need a test DB strategy.
+        # (e.g., separate test DB file, or in-memory :memory: SQLite for each test session)
+        # For alembic, ensure test DB is migrated if tests rely on schema.
+
+# Notes on this CI workflow:
+# - Caching: Caches the Poetry virtual environment based on the poetry.lock file hash.
+# - Ruff: Runs both linting and format checking.
+# - MyPy: Runs static type checking. Configuration is in pyproject.toml.
+# - Pytest: Runs tests from the `tests/` directory.
+# - virtualenvs-in-project: true for Poetry setup means .venv will be in the project root.
+#   This is generally good for CI consistency and caching.
+# - poetry install --no-root: Skips installing the project itself as editable, which is often fine for CI runs
+#   that just need dependencies to run linters/tests on the source code directly.
+#   If tests require the package to be "installed" to be importable in a certain way,
+#   then `poetry install` (without --no-root) might be needed.
+#   However, `poetry run` commands usually adjust PYTHONPATH such that local project code is found.
+#   The `packages = [{include = "app"}]` in pyproject.toml means `app` is the package.
+#   `poetry run pytest` should make `app` importable.
+# - Python version: Currently tests only against 3.11. Can add more to matrix if needed.
+# - Branch names: Adjusted to common defaults "main" or "master". User should verify.
+# - Environment variables for tests: If tests hit the DB or need other env vars, they must be provided in the `Run Pytest` step.
+#   The current `test_bpmn_service.py` mocks DB interactions, so it doesn't need a live DB_URL for its own execution.
+#   However, if `fastapi-users` or other components are tested at an integration level,
+#   they might need a test database setup and env vars.
+#   For now, this workflow assumes unit tests with mocks or self-contained integration tests.

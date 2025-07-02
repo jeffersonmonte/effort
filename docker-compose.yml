@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: . # Dockerfile is in the current directory (project root)
+      dockerfile: Dockerfile
+    container_name: interview_bpmn_app
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000 (where Uvicorn runs)
+    volumes:
+      # Persist the SQLite database file.
+      # The DATABASE_URL in app/db.py is "sqlite+aiosqlite:///./interview_bpmn.db"
+      # Uvicorn runs from /app (WORKDIR). So, the DB file will be at /app/interview_bpmn.db
+      - sqlite_db_data:/app
+      # For development, you might want to mount the app code for live reloading:
+      # - ./app:/app/app # Mount local ./app to /app/app in container
+      # This requires uvicorn to run with --reload and dev dependencies installed in image.
+      # The current Dockerfile is more for production (no --reload, no dev deps).
+      # For dev, a separate Dockerfile or multi-stage target might be used.
+      # For now, this compose file uses the "production-like" Dockerfile.
+    environment:
+      # Pass environment variables from a .env file at the project root
+      # Docker Compose automatically looks for a file named .env in the project directory
+      # and loads variables from it. These can be overridden here or used directly by the app if .env is copied.
+      # Since .env is in .dockerignore, we must pass them explicitly if needed by container runtime.
+      # Example:
+      # DATABASE_URL: "sqlite+aiosqlite:///./interview_bpmn.db" # Already hardcoded in app/db.py, but can be overridden
+      AUTH_SECRET: "${AUTH_SECRET}" # Reads from .env file in the directory where docker-compose is run
+      JWT_LIFETIME_SECONDS: "${JWT_LIFETIME_SECONDS}"
+      APP_BASE_URL: "${APP_BASE_URL}" # For generating magic links correctly from within container
+      SMTP_HOST: "mailhog" # Service name for MailHog
+      SMTP_PORT: "${SMTP_PORT}" # Usually 1025 for MailHog
+      SMTP_FROM_EMAIL: "${SMTP_FROM_EMAIL}"
+      SMTP_FROM_NAME: "${SMTP_FROM_NAME}"
+      # ADMIN_EMAIL: "${ADMIN_EMAIL}" # Used by seed script, not app runtime directly
+      # ADMIN_PASSWORD: "${ADMIN_PASSWORD}" # Used by seed script
+    depends_on:
+      - mailhog # Optional: ensures mailhog starts before app, though app might not connect on startup
+    networks:
+      - interview_network
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: interview_bpmn_mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI for viewing emails
+    networks:
+      - interview_network
+
+volumes:
+  sqlite_db_data: # Named volume to persist SQLite data
+
+networks:
+  interview_network:
+    driver: bridge
+
+# To run: docker-compose up --build
+# To run migrations (example, if not part of app startup or entrypoint):
+# docker-compose exec app poetry run alembic upgrade head
+# To run seed script:
+# docker-compose exec app poetry run python app/seed.py
+#
+# Note on SQLite volume:
+# Mounting a volume at /app means the entire /app directory (where the DB file is created)
+# will be persisted. This includes the DB file.
+# If the DB file was in a sub-directory like /app/data/, then - sqlite_db_data:/app/data
+# My DB_URL is "sqlite+aiosqlite:///./interview_bpmn.db", meaning it's created in the
+# current working directory of the Uvicorn process, which is /app in the container.
+# So, `sqlite_db_data:/app` is correct.
+# This also means any code changes require rebuilding the image unless live mount is used for dev.
+# For a production-like setup, this is fine.
+# For development, one might override the command in docker-compose to include --reload
+# and mount the local `./app` directory into `/app` in the container.
+# e.g. for app service:
+#    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app
+#    volumes:
+#      - ./app:/app  # Mount local app code
+#      - sqlite_db_data:/path/to/where/db/is/stored/if/not/in/app
+# If DB is in /app, then `/app` volume for code also covers DB.
+# But it's better to separate DB persistence.
+# If DB is in /app, then `sqlite_db_data:/app` effectively persists the whole workdir.
+# This is okay for SQLite as the DB is just a file.
+#
+# The Dockerfile copies `./app` to `/app/`.
+# So the structure in container is `/app/main.py`, `/app/models.py` etc.
+# And `/app/interview_bpmn.db`.
+# So, `volumes: - sqlite_db_data:/app` is appropriate.
+# The .env variables are passed to the 'app' service.
+# The app itself (via load_dotenv() in main.py) will also try to load a .env file from its CWD (/app).
+# Since .env is in .dockerignore, it won't be in the image.
+# So, the environment variables set in docker-compose `environment:` section are the source of truth for the container.
+# These variables are interpolated from the host's .env file (or shell environment) where `docker-compose up` is run.
+# This is a standard and secure way to handle configurations.
+# The `SMTP_HOST: "mailhog"` makes the app service use the MailHog service by its name on the shared Docker network.
